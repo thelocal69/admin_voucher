@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import Table from 'react-bootstrap/Table';
-import { getAllProduct, insertProduct } from '../services/ProductService';
+import { getAllProduct, insertProduct, updateProduct, deleteProduct } from '../services/ProductService';
+import { getAllColor } from '../services/ColorService';
+import { getAllCategory } from '../services/CategoryService';
+import { getAllSize } from '../services/SizeService';
 import { toast } from 'react-toastify';
 import ReactPaginate from 'react-paginate';
-import { Offcanvas, Button, Form } from 'react-bootstrap';
+import { Offcanvas, Button, Form, Modal, Table } from 'react-bootstrap';
 
 
 
 const TableUsers = (props) => {
 
     const [isShowModalAddNew, setIsShowModalAddNew] = React.useState(false);
+    const [isShowModalUpdate, setIsShowModalUpdate] = React.useState(false);
+    const [isShowModalDelete, setIsShowModalDelete] = React.useState(false);
+
     const [list, setList] = React.useState([]);
     const [totalProduct, setTotalProduct] = React.useState(0);
     const [totalPage, setTotalPage] = React.useState(0);
+    const [currentPage, setCurrentPage] = React.useState(1);
 
     const [name, setName] = React.useState("");
     const [image, setImage] = React.useState("");
@@ -20,14 +26,49 @@ const TableUsers = (props) => {
     const [description, setDescription] = React.useState("");
     const [quantity, setQuantity] = React.useState(0);
     const [category, setCategory] = React.useState("");
+    const [categoryNames, setCategoryNames] = React.useState([]);
     const [size, setSize] = React.useState("");
+    const [sizeNames, setSizeNames] = React.useState([]);
     const [color, setColor] = React.useState("");
+    const [colorNames, setColorNames] = React.useState([]);
+    const [objEdit, setObjEdit] = React.useState({});
+    const [objDelete, setObjDelete] = React.useState({});
 
     React.useEffect(() => {
         getProducts(1)
             .then((rs) => setList(rs.data))
             .catch((err) => toast.error(err.message));
+        getAllCategory()
+            .then((rs) => {
+                const value = rs?.data.map((item) => item.name);
+                setCategoryNames(value);
+            })
+            .catch((err) => toast.error(err.message));
+        getAllColor()
+            .then((rs) => {
+                const value = rs?.data.map((item) => item.name);
+                setColorNames(value);
+            })
+            .catch((err) => toast.error(err.message));
+        getAllSize()
+            .then((rs) => {
+                const value = rs?.data.map((item) => item.name);
+                setSizeNames(value);
+            })
+            .catch((err) => toast.error(err.message));
     }, []);
+
+    React.useEffect(() => {
+        categoryNames && setCategory(categoryNames[0]);
+    }, [categoryNames]);
+
+    React.useEffect(() => {
+        colorNames && setColor(colorNames[0]);
+    }, [colorNames]);
+
+    React.useEffect(() => {
+        sizeNames && setSize(sizeNames[0]);
+    }, [sizeNames]);
 
     const getProducts = async (page) => {
         let res = await getAllProduct(page);
@@ -76,12 +117,65 @@ const TableUsers = (props) => {
             });
     }
 
+    const handleUpdateProduct = async () => {
+        await updateProduct(objEdit)
+            .then((rs) => {
+                if (rs) {
+                    toast.success(rs.message);
+                    getAllProduct(currentPage)
+                        .then((rs) => setList(rs.data))
+                        .catch((err) => toast.error(err.message));
+                    handleClose();
+                    setName('');
+                    setImage('');
+                    setPrice(0);
+                    setDescription('');
+                    setQuantity(0);
+                    setCategory('');
+                    setColor('');
+                    setSize('')
+                }
+            })
+            .catch((err) => {
+                toast.error(err.message);
+            });
+    }
+
+    const handleDeleteProduct = async (product) => {
+        await deleteProduct(objDelete)
+            .then((rs) => {
+                if (rs) {
+                    toast.success(rs.message);
+                    getAllProduct(currentPage)
+                        .then((rs) => setList(rs.data))
+                        .catch((err) => toast.error(err.message));
+                    handleClose();
+                }
+            })
+            .catch((err) => {
+                toast.error(err.message);
+            });
+    }
+
+    const handClickEditProduct = (product) => {
+        setObjEdit(product);
+        setIsShowModalUpdate(true);
+    }
+
+    const handClickDeleteProduct = (product) => {
+        setObjDelete(product);
+        setIsShowModalDelete(true);
+    }
+
     const handleClose = () => {
         setIsShowModalAddNew(false);
+        setIsShowModalUpdate(false);
+        setIsShowModalDelete(false);
     }
 
     const handlePageClick = (event) => {
         getProducts(+event.selected + 1);
+        setCurrentPage(+event.selected + 1);
     }
 
     return (<>
@@ -95,6 +189,7 @@ const TableUsers = (props) => {
         <Table striped bordered hover size="sm">
             <thead>
                 <tr>
+                    <th>No</th>
                     <th>ID</th>
                     <th>Name</th>
                     <th>Image</th>
@@ -104,7 +199,7 @@ const TableUsers = (props) => {
                     <th>Category</th>
                     <th>Size</th>
                     <th>Color</th>
-                    <th>Created date</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -112,6 +207,7 @@ const TableUsers = (props) => {
                     list?.map((item, key) => {
                         return (
                             <tr key={key}>
+                                <td>{key + 1}</td>
                                 <td>{item?.id}</td>
                                 <td>{item?.name}</td>
                                 <td>{item?.image}</td>
@@ -121,12 +217,19 @@ const TableUsers = (props) => {
                                 <td>{item?.categoryName}</td>
                                 <td>{item?.sizeName}</td>
                                 <td>{item?.colorName}</td>
-                                <td>{item?.createDate}</td>
+                                <td>
+                                    <button className='btn btn-warning mx-2'
+                                        onClick={() => handClickEditProduct(item)}
+                                    >Edit</button>
+                                    <button className='btn btn-danger mx-2'
+                                        onClick={() => handClickDeleteProduct(item)}
+                                    >Delete</button>
+                                </td>
                             </tr>
                         )
                     }) : "no data"}
             </tbody>
-        </Table>
+        </Table >
         <ReactPaginate
             breakLabel="..."
             nextLabel="next >"
@@ -189,24 +292,33 @@ const TableUsers = (props) => {
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label>Category</Form.Label>
-                        <Form.Control type="text" placeholder="Enter category"
-                            value={category}
+                        <Form.Select type="text" placeholder="Enter category"
                             onChange={(event) => setCategory(event.target.value)}
-                        />
+                        >
+                            {categoryNames?.map((item) => {
+                                return <option value={item}>{item}</option>
+                            })}
+                        </Form.Select>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label>Size</Form.Label>
-                        <Form.Control type="text" placeholder="Enter size"
-                            value={size}
+                        <Form.Select type="text" placeholder="Enter size"
                             onChange={(event) => setSize(event.target.value)}
-                        />
+                        >
+                            {sizeNames?.map((item) => {
+                                return <option value={item}>{item}</option>
+                            })}
+                        </Form.Select>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label>Color</Form.Label>
-                        <Form.Control type="text" placeholder="Enter color"
-                            value={color}
+                        <Form.Select type="text" placeholder="Enter color"
                             onChange={(event) => setColor(event.target.value)}
-                        />
+                        >
+                            {colorNames?.map((item) => {
+                                return <option value={item}>{item}</option>
+                            })}
+                        </Form.Select>
                     </Form.Group>
                 </Form>
                 <div className='d-flex justify-content-between'>
@@ -219,6 +331,162 @@ const TableUsers = (props) => {
                 </div>
             </Offcanvas.Body>
         </Offcanvas>
+
+        <Offcanvas show={isShowModalUpdate} onHide={handleClose} placement='end' backdrop="static">
+            <Offcanvas.Header closeButton>
+                <Offcanvas.Title>Update product</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+                <Form>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Product name</Form.Label>
+                        <Form.Control type="text" placeholder="Enter name"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.name = event.target.value;
+                                setObjEdit(element);
+                            }}
+                            defaultValue={objEdit?.name}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Image</Form.Label>
+                        <Form.Control type="text" placeholder="Enter image"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.image = event.target.value;
+                                setObjEdit(element);
+                            }}
+                            defaultValue={objEdit?.image}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Price</Form.Label>
+                        <Form.Control type="number" placeholder="Enter price"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.price = event.target.value;
+                                setObjEdit(element);
+                            }}
+                            defaultValue={objEdit?.price}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Description</Form.Label>
+                        <Form.Control type="text" placeholder="Enter description"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.description = event.target.value;
+                                setObjEdit(element);
+                            }}
+                            defaultValue={objEdit?.description}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Quantity</Form.Label>
+                        <Form.Control type="number" placeholder="Enter quantity"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.quantity = event.target.value;
+                                setObjEdit(element);
+                            }}
+                            defaultValue={objEdit?.quantity}
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Category</Form.Label>
+                        <Form.Select type="text" placeholder="Enter category"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.categoryName = event.target.value;
+                                setObjEdit(element);
+                            }}
+                        >
+                            {
+                                categoryNames?.map((item) => {
+                                    return (
+                                        <option value={item}
+                                            selected={item === objEdit?.category ? true : false}
+                                        >
+                                            {item}
+                                        </option>
+                                    );
+                                })
+                            }
+                        </Form.Select>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Size</Form.Label>
+                        <Form.Select type="text" placeholder="Enter size"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.sizeName = event.target.value;
+                                setObjEdit(element);
+                            }}
+                        >
+                            {
+                                sizeNames?.map((item) => {
+                                    return (
+                                        <option
+                                            value={item}
+                                            selected={item === objEdit?.size ? true : false}
+                                        >
+                                            {item}
+                                        </option>
+                                    );
+                                })
+                            }
+                        </Form.Select>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Color</Form.Label>
+                        <Form.Select type="text" placeholder="Enter color"
+                            onChange={(event) => {
+                                let element = { ...objEdit }
+                                element.colorName = event.target.value;
+                                setObjEdit(element);
+                            }}
+                        >
+                            {
+                                colorNames?.map((item) => {
+                                    return (
+                                        <option
+                                            value={item}
+                                            selected={item === objEdit?.color ? true : false}
+                                        >
+                                            {item}
+                                        </option>
+                                    );
+                                })
+                            }
+                        </Form.Select>
+                    </Form.Group>
+                </Form>
+                <div className='d-flex justify-content-between'>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={() => handleUpdateProduct()}>
+                        Update Changes
+                    </Button>
+                </div>
+            </Offcanvas.Body>
+        </Offcanvas>
+
+        <Modal show={isShowModalDelete} onHide={handleClose}>
+            <Modal.Header closeButton>
+                <Modal.Title>Delete product</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>Do you want to delete !</Modal.Body>
+            <Modal.Footer className='d-flex justify-content-between'>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+                <Button variant="primary" onClick={() => handleDeleteProduct()}>
+                    Delete it
+                </Button>
+            </Modal.Footer>
+        </Modal>
     </>)
 }
 
