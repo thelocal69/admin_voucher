@@ -4,12 +4,14 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import '../components/SideMenu.scss';
 import TableProducts from './TableProducts';
 import Category from './Category';
+import Color from './Color';
 
 const SideMenu = (props) => {
 
     const list = [
         "Product",
-        "Category"
+        "Category",
+        "Color"
     ];
 
     const [activeTab, setActiveTab] = React.useState(0);
@@ -59,6 +61,7 @@ const SideMenu = (props) => {
             <Routes>
                 <Route path="/Product" element={<TableProducts />}></Route>
                 <Route path="/Category" element={<Category />}></Route>
+                <Route path="/Color" element={<Color />}></Route>
             </Routes>
         </>
     );

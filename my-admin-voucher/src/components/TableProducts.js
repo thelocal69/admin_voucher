@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { getAllProduct, insertProduct, updateProduct, deleteProduct } from '../services/ProductService';
-import { getAllColor } from '../services/ColorService';
-import { getAllCategory } from '../services/CategoryService';
-import { getAllSize } from '../services/SizeService';
+import {
+    getAllProduct,
+    insertProduct,
+    updateProduct,
+    deleteProduct,
+    getProductByName
+} from '../services/ProductService';
+import { getAllColorName } from '../services/ColorService';
+import { getAllCategoryName } from '../services/CategoryService';
+import { getAllSizeName } from '../services/SizeService';
 import { toast } from 'react-toastify';
 import ReactPaginate from 'react-paginate';
 import { Offcanvas, Button, Form, Modal, Table } from 'react-bootstrap';
+import '../components/TableProduct.scss';
+import { debounce } from 'lodash';
 
 
 
@@ -19,6 +27,9 @@ const TableUsers = (props) => {
     const [totalProduct, setTotalProduct] = React.useState(0);
     const [totalPage, setTotalPage] = React.useState(0);
     const [currentPage, setCurrentPage] = React.useState(1);
+    const [sortBy, setSortBy] = React.useState("desc");
+    const [sortField, setSortField] = React.useState("id");
+    const [keyWord, setKeyWord] = React.useState("");
 
     const [name, setName] = React.useState("");
     const [image, setImage] = React.useState("");
@@ -35,24 +46,27 @@ const TableUsers = (props) => {
     const [objDelete, setObjDelete] = React.useState({});
 
     React.useEffect(() => {
-        getProducts(1)
+        getProducts(currentPage, sortBy, sortField)
             .then((rs) => setList(rs.data))
             .catch((err) => toast.error(err.message));
-        getAllCategory()
+        getProductName(keyWord)
+            .then((rs) => setList(rs.data))
+            .catch((err) => toast.error(err.message));
+        getAllCategoryName()
             .then((rs) => {
-                const value = rs?.data.map((item) => item.name);
+                const value = rs.data;
                 setCategoryNames(value);
             })
             .catch((err) => toast.error(err.message));
-        getAllColor()
+        getAllColorName()
             .then((rs) => {
-                const value = rs?.data.map((item) => item.name);
+                const value = rs.data;
                 setColorNames(value);
             })
             .catch((err) => toast.error(err.message));
-        getAllSize()
+        getAllSizeName()
             .then((rs) => {
-                const value = rs?.data.map((item) => item.name);
+                const value = rs.data;
                 setSizeNames(value);
             })
             .catch((err) => toast.error(err.message));
@@ -70,12 +84,19 @@ const TableUsers = (props) => {
         sizeNames && setSize(sizeNames[0]);
     }, [sizeNames]);
 
-    const getProducts = async (page) => {
-        let res = await getAllProduct(page);
+    const getProducts = async (page, sortBy, sortField) => {
+        let res = await getAllProduct(page, sortBy, sortField);
         if (res && res.data) {
-            setTotalProduct(res.totalItems)
-            setList(res.data)
-            setTotalPage(res.totalPages)
+            setTotalProduct(res.totalItems);
+            setList(res.data);
+            setTotalPage(res.totalPages);
+        }
+    }
+
+    const getProductName = async (keyWord) => {
+        let res = await getProductByName(keyWord);
+        if (res && res.data) {
+            setList(res.data);
         }
     }
 
@@ -98,7 +119,7 @@ const TableUsers = (props) => {
             .then((rs) => {
                 if (rs) {
                     toast.success(rs.message);
-                    getAllProduct(1)
+                    getAllProduct(currentPage, sortBy, sortField)
                         .then((rs) => setList(rs.data))
                         .catch((err) => toast.error(err.message));
                     handleClose();
@@ -122,18 +143,10 @@ const TableUsers = (props) => {
             .then((rs) => {
                 if (rs) {
                     toast.success(rs.message);
-                    getAllProduct(currentPage)
+                    getAllProduct(currentPage, sortBy, sortField)
                         .then((rs) => setList(rs.data))
                         .catch((err) => toast.error(err.message));
                     handleClose();
-                    setName('');
-                    setImage('');
-                    setPrice(0);
-                    setDescription('');
-                    setQuantity(0);
-                    setCategory('');
-                    setColor('');
-                    setSize('')
                 }
             })
             .catch((err) => {
@@ -146,7 +159,7 @@ const TableUsers = (props) => {
             .then((rs) => {
                 if (rs) {
                     toast.success(rs.message);
-                    getAllProduct(currentPage)
+                    getAllProduct(currentPage, sortBy, sortField)
                         .then((rs) => setList(rs.data))
                         .catch((err) => toast.error(err.message));
                     handleClose();
@@ -174,13 +187,38 @@ const TableUsers = (props) => {
     }
 
     const handlePageClick = (event) => {
-        getProducts(+event.selected + 1);
+        getProducts(+event.selected + 1, sortBy, sortField);
         setCurrentPage(+event.selected + 1);
     }
+
+    const handleSortClick = (sortBy, sortField) => {
+        setSortBy(sortBy);
+        setSortField(sortField);
+        getProducts(currentPage, sortBy, sortField);
+    }
+
+    const handleSearchByName = debounce((event) => {
+        let term = event.target.value;
+        if (term) {
+            setKeyWord(term)
+            getProductName(term);
+        } else {
+            getProducts(currentPage, sortBy, sortField);
+        }
+    }, 1000)
 
     return (<>
         <div className='my-3 d-flex justify-content-between'>
             List Products:
+        </div>
+        <div className='my-3 d-flex justify-content-between'>
+            <div>
+                <input
+                    className='form-control'
+                    placeholder='Search product by name...'
+                    onChange={(event) => handleSearchByName(event)}
+                />
+            </div>
             <button className='btn btn-success'
                 onClick={() => setIsShowModalAddNew(true)}
             >Add new product</button>
@@ -190,7 +228,19 @@ const TableUsers = (props) => {
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>ID</th>
+                    <th>
+                        <div className='sort-header'>
+                            <span>ID</span>
+                            <span>
+                                <i class="fa-solid fa-sort-down"
+                                    onClick={() => handleSortClick("desc", "id")}
+                                ></i>
+                                <i class="fa-solid fa-sort-up"
+                                    onClick={() => handleSortClick("asc", "id")}
+                                ></i>
+                            </span>
+                        </div>
+                    </th>
                     <th>Name</th>
                     <th>Image</th>
                     <th>Price</th>
@@ -406,7 +456,7 @@ const TableUsers = (props) => {
                                 categoryNames?.map((item) => {
                                     return (
                                         <option value={item}
-                                            selected={item === objEdit?.category ? true : false}
+                                            selected={item === objEdit?.categoryName ? true : false}
                                         >
                                             {item}
                                         </option>
@@ -429,7 +479,7 @@ const TableUsers = (props) => {
                                     return (
                                         <option
                                             value={item}
-                                            selected={item === objEdit?.size ? true : false}
+                                            selected={item === objEdit?.sizeName ? true : false}
                                         >
                                             {item}
                                         </option>
@@ -452,7 +502,7 @@ const TableUsers = (props) => {
                                     return (
                                         <option
                                             value={item}
-                                            selected={item === objEdit?.color ? true : false}
+                                            selected={item === objEdit?.colorName ? true : false}
                                         >
                                             {item}
                                         </option>

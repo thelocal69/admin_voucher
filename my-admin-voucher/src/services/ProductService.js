@@ -1,7 +1,11 @@
 import http from "../configs/http";
 
-export const getAllProduct = (page) => {
-    return http.get(`/product?page=${page}`);
+export const getAllProduct = (page, sortBy, sortField) => {
+    return http.get(`/product?page=${page}&sortBy=${sortBy}&sortField=${sortField}`);
+}
+
+export const getProductByName = (name) => {
+    return http.get(`/product/api/productName?name=${name}`);
 }
 
 export const insertProduct = (obj) => {
