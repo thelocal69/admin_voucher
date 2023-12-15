@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
     getAllProduct,
     insertProduct,
     updateProduct,
     deleteProduct,
-    getProductByName
+    getProductByName,
+    getAllProductNoClause
 } from '../services/ProductService';
 import { getAllColorName } from '../services/ColorService';
 import { getAllCategoryName } from '../services/CategoryService';
@@ -14,6 +15,8 @@ import ReactPaginate from 'react-paginate';
 import { Offcanvas, Button, Form, Modal, Table } from 'react-bootstrap';
 import '../components/TableProduct.scss';
 import { debounce } from 'lodash';
+import { CSVLink } from "react-csv";
+import Papa from 'papaparse';
 
 
 
@@ -30,7 +33,9 @@ const TableUsers = (props) => {
     const [sortBy, setSortBy] = React.useState("desc");
     const [sortField, setSortField] = React.useState("id");
     const [keyWord, setKeyWord] = React.useState("");
+    const [dataExport, setDataExport] = React.useState([]);
 
+    const [id, setId] = React.useState(1);
     const [name, setName] = React.useState("");
     const [image, setImage] = React.useState("");
     const [price, setPrice] = React.useState(0);
@@ -51,6 +56,9 @@ const TableUsers = (props) => {
             .catch((err) => toast.error(err.message));
         getProductName(keyWord)
             .then((rs) => setList(rs.data))
+            .catch((err) => toast.error(err.message));
+        getAllProductNoClause()
+            .then((rs) => setDataExport(rs.data))
             .catch((err) => toast.error(err.message));
         getAllCategoryName()
             .then((rs) => {
@@ -197,6 +205,21 @@ const TableUsers = (props) => {
         getProducts(currentPage, sortBy, sortField);
     }
 
+    const handleImportCSV = (event) => {
+        if (event.target && event.target.files && event.target.files[0]) {
+            let file = event.target.files[0];
+            if (file.type !== "text/csv") {
+                toast.error("Only accept CSV file !");
+            }
+            Papa.parse(file, {
+                header: true,
+                complete: function (result) {
+                    console.log("finished: ", result);
+                }
+            });
+        }
+    }
+
     const handleSearchByName = debounce((event) => {
         let term = event.target.value;
         if (term) {
@@ -209,7 +232,29 @@ const TableUsers = (props) => {
 
     return (<>
         <div className='my-3 d-flex justify-content-between'>
-            List Products:
+            <span>
+                <b>List Products:</b>
+            </span>
+            <div className='group-btns'>
+                <div>
+                    <label htmlFor='Import File' className='btn btn-secondary'>
+                        <i class="fa-solid fa-file-import"></i>
+                        Import File
+                    </label>
+                    <input id='Import File' type='file' hidden
+                        onChange={(event) => handleImportCSV(event)}
+                    />
+                </div>
+                <CSVLink
+                    data={dataExport}
+                    filename={"product-cozastore.csv"}
+                    className="btn btn-info"
+                    target="_blank"
+                >
+                    <i class="fa-solid fa-file-export"></i>
+                    Export File
+                </CSVLink>
+            </div>
         </div>
         <div className='my-3 d-flex justify-content-between'>
             <div>
@@ -221,7 +266,10 @@ const TableUsers = (props) => {
             </div>
             <button className='btn btn-success'
                 onClick={() => setIsShowModalAddNew(true)}
-            >Add new product</button>
+            >
+                <i class="fa-solid fa-circle-plus"></i>
+                <span>Add new product</span>
+            </button>
         </div>
 
         <Table striped bordered hover size="sm">
@@ -270,10 +318,16 @@ const TableUsers = (props) => {
                                 <td>
                                     <button className='btn btn-warning mx-2'
                                         onClick={() => handClickEditProduct(item)}
-                                    >Edit</button>
+                                    >
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span>Edit</span>
+                                    </button>
                                     <button className='btn btn-danger mx-2'
                                         onClick={() => handClickDeleteProduct(item)}
-                                    >Delete</button>
+                                    >
+                                        <i class="fa-solid fa-trash"></i>
+                                        <span>Delete</span>
+                                    </button>
                                 </td>
                             </tr>
                         )
@@ -373,9 +427,11 @@ const TableUsers = (props) => {
                 </Form>
                 <div className='d-flex justify-content-between'>
                     <Button variant="secondary" onClick={handleClose}>
+                        <i class="fa-solid fa-circle-xmark"></i>
                         Close
                     </Button>
                     <Button variant="primary" onClick={() => handleSaveProduct()}>
+                        <i class="fa-solid fa-floppy-disk"></i>
                         Save Changes
                     </Button>
                 </div>
@@ -514,9 +570,11 @@ const TableUsers = (props) => {
                 </Form>
                 <div className='d-flex justify-content-between'>
                     <Button variant="secondary" onClick={handleClose}>
+                        <i class="fa-solid fa-circle-xmark"></i>
                         Close
                     </Button>
                     <Button variant="primary" onClick={() => handleUpdateProduct()}>
+                        <i class="fa-solid fa-floppy-disk"></i>
                         Update Changes
                     </Button>
                 </div>
@@ -530,9 +588,11 @@ const TableUsers = (props) => {
             <Modal.Body>Do you want to delete !</Modal.Body>
             <Modal.Footer className='d-flex justify-content-between'>
                 <Button variant="secondary" onClick={handleClose}>
+                    <i class="fa-solid fa-circle-xmark"></i>
                     Close
                 </Button>
                 <Button variant="primary" onClick={() => handleDeleteProduct()}>
+                    <i class="fa-solid fa-check"></i>
                     Delete it
                 </Button>
             </Modal.Footer>

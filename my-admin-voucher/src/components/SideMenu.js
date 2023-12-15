@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import '../components/SideMenu.scss';
@@ -38,13 +38,14 @@ const SideMenu = (props) => {
                 <Offcanvas.Header closeButton>
                     <Offcanvas.Title>COZASTORE ADMIN</Offcanvas.Title>
                 </Offcanvas.Header>
-                <Offcanvas.Body>
+                <Offcanvas.Body className='nav'>
                     {
                         list?.map((item, key) => {
                             return (
                                 <>
                                     <Link to={`${item.toLowerCase()}`}>
                                         <Offcanvas.Title
+                                            className='nav-item'
                                             key={key}
                                             onClick={() => handleClick(key)}
                                         >

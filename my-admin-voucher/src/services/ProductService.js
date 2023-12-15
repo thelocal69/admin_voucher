@@ -1,5 +1,9 @@
 import http from "../configs/http";
 
+export const getAllProductNoClause = () => {
+    return http.get(`/product/api/getAll`);
+}
+
 export const getAllProduct = (page, sortBy, sortField) => {
     return http.get(`/product?page=${page}&sortBy=${sortBy}&sortField=${sortField}`);
 }
