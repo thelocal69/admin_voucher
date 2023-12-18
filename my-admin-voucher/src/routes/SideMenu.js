@@ -1,10 +1,11 @@
 import React from 'react';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
-import '../components/SideMenu.scss';
-import TableProducts from './TableProducts';
-import Category from './Category';
-import Color from './Color';
+import './SideMenu.scss';
+import TableProducts from '../components/TableProducts';
+import Category from '../components/Category';
+import Color from '../components/Color';
+import PrivateRoutes from './PrivateRoutes';
 
 const SideMenu = (props) => {
 
@@ -60,9 +61,9 @@ const SideMenu = (props) => {
             </Offcanvas>
 
             <Routes>
-                <Route path="/Product" element={<TableProducts />}></Route>
-                <Route path="/Category" element={<Category />}></Route>
-                <Route path="/Color" element={<Color />}></Route>
+                <Route path="/Product" element={<PrivateRoutes Component={TableProducts} />} />
+                <Route path="/Category" element={<PrivateRoutes Component={Category} />} />
+                <Route path="/Color" element={<PrivateRoutes Component={Color} />} />
             </Routes>
         </>
     );

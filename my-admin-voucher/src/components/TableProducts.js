@@ -51,7 +51,7 @@ const TableUsers = (props) => {
     const [objDelete, setObjDelete] = React.useState({});
 
     React.useEffect(() => {
-        getProducts(currentPage, sortBy, sortField)
+        getAllProduct(currentPage, sortBy, sortField)
             .then((rs) => setList(rs.data))
             .catch((err) => toast.error(err.message));
         getProductName(keyWord)

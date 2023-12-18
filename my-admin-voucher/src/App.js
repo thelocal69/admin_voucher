@@ -1,7 +1,7 @@
 import './App.scss';
-import Header from './components/Header';
+import Header from './routes/Header';
 import React from 'react';
-import HomePage from './components/HomePage';
+
 
 function App() {
 
