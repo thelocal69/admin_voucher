@@ -11,12 +11,12 @@ import { getAllColorName } from '../services/ColorService';
 import { getAllCategoryName } from '../services/CategoryService';
 import { getAllSizeName } from '../services/SizeService';
 import { toast } from 'react-toastify';
-import ReactPaginate from 'react-paginate';
 import { Offcanvas, Button, Form, Modal, Table } from 'react-bootstrap';
 import '../components/TableProduct.scss';
 import { debounce } from 'lodash';
 import { CSVLink } from "react-csv";
 import Papa from 'papaparse';
+import Paging from './Paging';
 
 
 
@@ -51,7 +51,7 @@ const TableUsers = (props) => {
     const [objDelete, setObjDelete] = React.useState({});
 
     React.useEffect(() => {
-        getAllProduct(currentPage, sortBy, sortField)
+        getProducts(currentPage, sortBy, sortField)
             .then((rs) => setList(rs.data))
             .catch((err) => toast.error(err.message));
         getProductName(keyWord)
@@ -127,7 +127,7 @@ const TableUsers = (props) => {
             .then((rs) => {
                 if (rs) {
                     toast.success(rs.message);
-                    getAllProduct(currentPage, sortBy, sortField)
+                    getProducts(currentPage, sortBy, sortField)
                         .then((rs) => setList(rs.data))
                         .catch((err) => toast.error(err.message));
                     handleClose();
@@ -136,9 +136,6 @@ const TableUsers = (props) => {
                     setPrice(0);
                     setDescription('');
                     setQuantity(0);
-                    setCategory('');
-                    setColor('');
-                    setSize('')
                 }
             })
             .catch((err) => {
@@ -151,7 +148,7 @@ const TableUsers = (props) => {
             .then((rs) => {
                 if (rs) {
                     toast.success(rs.message);
-                    getAllProduct(currentPage, sortBy, sortField)
+                    getProducts(currentPage, sortBy, sortField)
                         .then((rs) => setList(rs.data))
                         .catch((err) => toast.error(err.message));
                     handleClose();
@@ -167,7 +164,7 @@ const TableUsers = (props) => {
             .then((rs) => {
                 if (rs) {
                     toast.success(rs.message);
-                    getAllProduct(currentPage, sortBy, sortField)
+                    getProducts(currentPage, sortBy, sortField)
                         .then((rs) => setList(rs.data))
                         .catch((err) => toast.error(err.message));
                     handleClose();
@@ -231,8 +228,8 @@ const TableUsers = (props) => {
     }, 1000)
 
     return (<>
-        <div className='my-3 d-flex justify-content-between'>
-            <span>
+        <div className='my-3 d-sm-flex justify-content-between'>
+            <span >
                 <b>List Products:</b>
             </span>
             <div className='group-btns'>
@@ -256,7 +253,7 @@ const TableUsers = (props) => {
                 </CSVLink>
             </div>
         </div>
-        <div className='my-3 d-flex justify-content-between'>
+        <div className='my-3 d-sm-flex justify-content-between'>
             <div>
                 <input
                     className='form-control'
@@ -272,6 +269,7 @@ const TableUsers = (props) => {
             </button>
         </div>
 
+        <div className='customize-table'>
         <Table striped bordered hover size="sm">
             <thead>
                 <tr>
@@ -334,25 +332,13 @@ const TableUsers = (props) => {
                     }) : "no data"}
             </tbody>
         </Table >
-        <ReactPaginate
-            breakLabel="..."
-            nextLabel="next >"
-            onPageChange={handlePageClick}
-            pageRangeDisplayed={5}
-            pageCount={totalPage}
-            previousLabel="<< previous"
-            renderOnZeroPageCount={null}
-            pageClassName='page-item'
-            pageLinkClassName='page-link'
-            previousClassName='page-item'
-            previousLinkClassName='page-link'
-            nextClassName='page-item'
-            nextLinkClassName='page-link'
-            breakClassName='page-item'
-            breakLinkClassName='page-link'
-            containerClassName='pagination'
-            activeClassName='active'
+        </div>
+            
+        <Paging 
+            handlePageClick={handlePageClick}
+            totalPages={totalPage}
         />
+
         <Offcanvas show={isShowModalAddNew} onHide={handleClose} placement='end' backdrop="static">
             <Offcanvas.Header closeButton>
                 <Offcanvas.Title>Add new product</Offcanvas.Title>

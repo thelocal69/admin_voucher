@@ -4,6 +4,8 @@ import './Login.scss';
 import { loginUser } from '../services/LoginService';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from "react-redux";
+import { logIn, selectAccessToken } from '../redux/feature/authSlice';
 
 
 const Login = () => {
@@ -14,9 +16,12 @@ const Login = () => {
     const [loadingApi, setLoadingApi] = React.useState(false);
 
     const obj = {
-        email: email,
+        email: email.trim(),
         password: password
     }
+
+    const dispatch = useDispatch();
+    const token = useSelector(selectAccessToken);
 
     React.useEffect(() => {
         let token = localStorage.getItem("token");
@@ -35,8 +40,8 @@ const Login = () => {
         setLoadingApi(true);
         let res = await loginUser(obj);
         if (res && res.data) {
-            localStorage.setItem("token", res.data);
             toast.success(res.message);
+            dispatch(logIn(res.data));
             navigate("/Home");
         }
         setLoadingApi(false);
