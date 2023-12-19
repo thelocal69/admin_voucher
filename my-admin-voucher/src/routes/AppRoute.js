@@ -2,7 +2,7 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import PrivateRoutes from "../routes/PrivateRoutes";
 import Login from "../components/Login";
-import NotFound from "./NotFound";
+import NotFound from "../components/NotFound";
 import HomePage from "../components/HomePage";
 import TableProducts from '../components/TableProducts';
 import Category from '../components/Category';

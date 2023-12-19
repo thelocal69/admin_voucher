@@ -6,8 +6,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import logoBrand from "../assets/logo/logo-01.png";
 import { NavLink } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { logOut } from "../redux/feature/authSlice";
+import { logOut } from "../redux/feature/authen/authSlice";
 import store from "../redux/store";
+import { removeUserPayload } from "../redux/feature/data/UserSlice";
 
 const Header = (props) => {
   const [isShowMenu, setIsShowMenu] = React.useState(false);
@@ -17,12 +18,15 @@ const Header = (props) => {
   const dispatch = useDispatch();
 
   let isAuthenticated = store.getState().auth.isAuthenticated;
-  console.log(isAuthenticated);
+  const token = store.getState().auth.accessToken;
+  
   React.useEffect(() => {
     if (isAuthenticated) {
       setIsShowHeader(true);
+    }else{
+      setIsShowHeader(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const handleClose = () => {
     setIsShowMenu(false);
@@ -30,9 +34,12 @@ const Header = (props) => {
 
   const handleLogout = () => {
     dispatch(logOut());
+    dispatch(removeUserPayload());
     navigate("/");
   };
-
+  const email = store.getState().user.email;
+  let index = email.indexOf('@');
+  const username = email.substring(0, index);
   return (
     <>
       {isShowHeader && (
@@ -57,16 +64,17 @@ const Header = (props) => {
                 </NavLink>
               </Nav>
               <Nav>
+                <NavLink>{username}</NavLink>
                 <NavDropdown title="Account" id="basic-nav-dropdown">
                   <NavLink
                     to="/"
                     className="dropdown-item"
-                    hidden={localStorage.getItem("token") ? true : false}
+                    hidden={token ? true : false}
                   >
                     Login
                   </NavLink>
                   <NavDropdown.Item
-                    hidden={localStorage.getItem("token") ? false : true}
+                    hidden={token ? false : true}
                     onClick={() => handleLogout()}
                   >
                     Logout

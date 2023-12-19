@@ -1,6 +1,6 @@
 import "./App.scss";
 import AppRoute from "./routes/AppRoute";
-import Header from "./routes/Header";
+import Header from "./components/Header";
 import React from "react";
 import {Container} from 'react-bootstrap';
 

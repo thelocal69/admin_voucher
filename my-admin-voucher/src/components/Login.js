@@ -5,7 +5,8 @@ import { loginUser } from '../services/LoginService';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from "react-redux";
-import { logIn, selectAccessToken } from '../redux/feature/authSlice';
+import { logIn, selectAccessToken } from '../redux/feature/authen/authSlice';
+import { userPayload } from '../redux/feature/data/UserSlice';
 
 
 const Login = () => {
@@ -24,7 +25,6 @@ const Login = () => {
     const token = useSelector(selectAccessToken);
 
     React.useEffect(() => {
-        let token = localStorage.getItem("token");
         if (token) {
             navigate("/Home");
         }
@@ -42,6 +42,7 @@ const Login = () => {
         if (res && res.data) {
             toast.success(res.message);
             dispatch(logIn(res.data));
+            dispatch(userPayload(email));
             navigate("/Home");
         }
         setLoadingApi(false);
